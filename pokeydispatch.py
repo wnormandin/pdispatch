@@ -121,16 +121,15 @@ class Color:
 
 class Server:
 
-    def __init__(self, args):
-        self.args = args
+    def __init__(self):
+        pass
 
 class Client:
 
-    def __init__(self, args):
-        self.args = args
+    def __init__(self):
         self.client = paramiko.SSHClient()
-        if self.args.host_key_file is not None:
-            self.client.load_host_keys(filename=self.args.host_key_file)
+        if args.host_key_file is not None:
+            self.client.load_host_keys(filename=args.host_key_file)
         self.client.set_missing_host_key_policy(policy=paramiko.AutoAddPolicy())
 
     def cxn_params(self, ip):
@@ -140,7 +139,7 @@ class Client:
         if ':' in ip:
             ip, port = ip.split(':')
             return ip, int(port)
-        return ip, self.args.port
+        return ip, args.port
 
     def execute(self):
         for item in args.ip:
@@ -160,12 +159,12 @@ class Client:
                 self.disconnect()
 
     def connect(self, ip, port):
-        if self.args.rsa is not None:
-            self.client.connect(ip, port=port, username=self.args.user,
-                    key_filename=self.args.rsa, timeout=self.args.timeout)
+        if args.rsa is not None:
+            self.client.connect(ip, port=port, username=args.user,
+                    key_filename=args.rsa, timeout=args.timeout)
         else:
-            self.client.connect(ip, port=port, username=self.args.user,
-                    password=self.args.passwd, timeout=self.args.timeout)
+            self.client.connect(ip, port=port, username=args.user,
+                    password=args.passwd, timeout=args.timeout)
 
     def disconnect(self):
         self.client.close()
@@ -173,12 +172,12 @@ class Client:
     def session_run(self):
         if self.ssh_session.active:
             cprint(' - SSH session active', Color.BLUE, True)
-            if self.args.cmd is not None:
+            if args.cmd is not None:
                 self.ssh_session.exec_command(args.cmd)
                 cprint(self.ssh_session.recv(1024).decode().rstrip())
-            if self.args.interactive:
+            if args.interactive:
                 pass
-            if self.args.remote:
+            if args.remote:
                 while True:
                     command = self.ssh_session.recv(1024)
                     if command == "DISCONNECT":
@@ -192,11 +191,12 @@ class Client:
 
 if __name__=='__main__':
     try:
+        global args
         args = cli()
         if args.server:
-            app = Server(args)
+            app = Server()
         else:
-            app = Client(args)
+            app = Client()
         app.execute()
     except KeyboardInterrupt:
         cprint('[*] Keyboard interrupt detected, aborting', Color.ERR)
