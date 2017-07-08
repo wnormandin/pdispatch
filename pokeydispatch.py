@@ -53,16 +53,16 @@ USAGE= '''
 
     Usage Examples:
         ## Basic connectivity test
-        $ ./sshcmd.py --rsa=/path/to/id_rsa.pub --user=<username> --ip <destination IP> --cmd "uname -a"
+        $ ./pokeydispatch.py --rsa=/path/to/id_rsa.pub --user=<username> --ip <destination IP> --cmd "uname -a"
 
         ## Passwords may be passed, though keys are recommended
-        $ ./sshcmd.py --user=<username> --password=<password> --ip <destination IP> --cmd "ls"
+        $ ./pokeydispatch.py --user=<username> --password=<password> --ip <destination IP> --cmd "ls"
 
         ## Multiple destination IPs are possible
-        $ ./sshcmd.py --user=<username> --rsa=<rsa_pub> --ip 12.34.56.78:122 192.168.1.12:9998
+        $ ./pokeydispatch.py --user=<username> --rsa=<rsa_pub> --ip 12.34.56.78:122 192.168.1.12:9998
 
         ## If they all share a common port, use --port
-        $ ./sshcmd.py --user=<username> --rsa=<rsa_pub> --port=<common port> --ip 12.34.56.78 192.168.1.12
+        $ ./pokeydispatch.py --user=<username> --rsa=<rsa_pub> --port=<common port> --ip 12.34.56.78 192.168.1.12
     '''
 
 def cli():
