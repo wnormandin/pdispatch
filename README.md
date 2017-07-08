@@ -107,7 +107,7 @@ Linux server.test.us 2.6.32-696.3.1.el6.x86_64 #1 SMP Tue May 30 19:52:55 UTC 20
  -  Getting command
 Command: quit
 [*] Exiting
-[!] Unhandled exception: exit
+[!] exit
 ```
 
 ## Client Side
@@ -117,5 +117,5 @@ Command: quit
 [*] Connected to 127.0.0.1:9998
  - SSH session active
 Welcome to pokey_ssh
-[!] Unhandled exception: Socket is closed
+[!] Socket is closed
 ```
