@@ -44,8 +44,8 @@ except:
     sys.exit(1)
 
 USAGE= '''
-    This simple SSH client can be used as a remote SSH server if
-    required (e.g. on Windows servers).
+
+    Execute commands via ssh
 
     Currently accepts password or public-key authentication
     methods (RSA only).  DSA and other methods to be supported
@@ -53,16 +53,16 @@ USAGE= '''
 
     Usage Examples:
         ## Basic connectivity test
-        $ ./pokeydispatch.py --rsa=/path/to/id_rsa.pub --user=<username> --ip <destination IP> --cmd "uname -a"
+        $ ./sshcmd.py --rsa=/path/to/id_rsa.pub --user=<username> --ip <destination IP> --cmd "uname -a"
 
         ## Passwords may be passed, though keys are recommended
-        $ ./pokeydispatch.py --user=<username> --password=<password> --ip <destination IP> --cmd "ls"
+        $ ./sshcmd.py --user=<username> --password=<password> --ip <destination IP> --cmd "ls"
 
         ## Multiple destination IPs are possible
-        $ ./pokeydispatch.py --user=<username> --rsa=<rsa_pub> --ip 12.34.56.78:122 192.168.1.12:9998
+        $ ./sshcmd.py --user=<username> --rsa=<rsa_pub> --ip 12.34.56.78:122 192.168.1.12:9998
 
         ## If they all share a common port, use --port
-        $ ./pokeydispatch.py --user=<username> --rsa=<rsa_pub> --port=<common port> --ip 12.34.56.78 192.168.1.12
+        $ ./sshcmd.py --user=<username> --rsa=<rsa_pub> --port=<common port> --ip 12.34.56.78 192.168.1.12
     '''
 
 def cli():
@@ -72,9 +72,10 @@ def cli():
     parser.add_argument('--user', type=str, help='SSH Username (default=root)', default='root')
     parser.add_argument('--passwd', type=str, help='SSH password')
     parser.add_argument('--host-key-file', type=str, help='Path to known_hosts')
-    parser.add_argument('--rsa', type=str, help='Path to id_rsa or other key file')
+    parser.add_argument('--rsa', type=str, help='Path to rsa key file')
     parser.add_argument('--cmd', type=str, help='Quoted command to be executed remotely')
     parser.add_argument('--timeout', type=int, help='SSH connection/command timeout (default=5s)', default=5)
+    parser.add_argument('-s', '--server', action='store_true', help='Run in SSH server mode')
     parser.add_argument('-C', '--nocolor', action='store_true', help='Disable colors in output')
     parser.add_argument('-r', '--remote', action='store_true', help='Execute commands sent by remote')
     parser.add_argument('-v', '--verbose', action='store_true', help='Enable verbose output')
@@ -118,58 +119,88 @@ class Color:
     ERR = '\x1b[1;31;44m'
     TST = '\x1b[7;34;46m'
 
-def ssh_command(args):
-    # Use remote=True to run as SSH server on windows
-    client = paramiko.SSHClient()
-    if args.host_key_file is not None:
-        client.load_host_keys(filename=args.host_key_file)
-    client.set_missing_host_key_policy(policy=paramiko.AutoAddPolicy())
-    for ip in args.ip:
-        cprint('-'*50, Color.BLUE, True)
+class Server:
+
+    def __init__(self, args):
+        self.args = args
+
+class Client:
+
+    def __init__(self, args):
+        self.args = args
+        self.client = paramiko.SSHClient()
+        if self.args.host_key_file is not None:
+            self.client.load_host_keys(filename=self.args.host_key_file)
+        self.client.set_missing_host_key_policy(policy=paramiko.AutoAddPolicy())
+
+    def cxn_params(self, ip):
         if '::' in ip:
             cprint('[*] IPv6 not supported: {}'.format(ip), Color.ERR)
-            continue
-
+            return False
         if ':' in ip:
             ip, port = ip.split(':')
-            port = int(port)
+            return ip, int(port)
+        return ip, self.args.port
+
+    def execute(self):
+        for item in args.ip:
+            cprint('-'*50, Color.BLUE, True)
+            params = self.cxn_params(item)
+            if params:
+                ip, port = params
+                try:
+                    self.connect(ip, port)
+                except (TimeoutError, TOE):
+                    cprint('[!] Connection to {}:{} timed out'.format(
+                                                    ip, port), Color.ERR)
+                    continue
+                cprint('[*] Connected to {}:{}'.format(ip, port), Color.GREEN, True)
+                self.ssh_session = self.client.get_transport().open_session()
+                self.session_run()
+                self.disconnect()
+
+    def connect(self, ip, port):
+        if self.args.rsa is not None:
+            self.client.connect(ip, port=port, username=self.args.user,
+                    key_filename=self.args.rsa, timeout=self.args.timeout)
         else:
-            port = args.port
+            self.client.connect(ip, port=port, username=self.args.user,
+                    password=self.args.passwd, timeout=self.args.timeout)
 
-        try:
-            if args.rsa is not None:
-                client.connect(ip, port=port, username=args.user, key_filename=args.rsa, timeout=args.timeout)
-            else:
-                client.connect(ip, port=args.port, username=args.user, password=args.passwd, timeout=args.timeout)
-        except (TimeoutError, TOE):
-            cprint('[*] Connection to {}:{} timed out'.format(ip, port), Color.ERR)
-            continue
+    def disconnect(self):
+        self.client.close()
 
-        cprint('[*] Connected to {}:{}'.format(ip, port), Color.GREEN, True)
-        ssh_session = client.get_transport().open_session()
-
-        if ssh_session.active:
-            cprint(' -  SSH session active', Color.BLUE, True)
-            if args.cmd is not None:
-                ssh_session.exec_command(args.cmd)
-                cprint(ssh_session.recv(1024).decode())
-            if args.interactive:
-                pass    # Not implemented
-            if args.remote:
+    def session_run(self):
+        if self.ssh_session.active:
+            cprint(' - SSH session active', Color.BLUE, True)
+            if self.args.cmd is not None:
+                self.ssh_session.exec_command(args.cmd)
+                cprint(self.ssh_session.recv(1024).decode().rstrip())
+            if self.args.interactive:
+                pass
+            if self.args.remote:
                 while True:
-                    command = ssh_session.recv(1024)
+                    command = self.ssh_session.recv(1024)
+                    if command == "DISCONNECT":
+                        return
                     try:
                         output = subprocess.check_output(command, shell=True)
-                        ssh_session.send(output)
+                        self.ssh_session.send(output)
                     except Exception as e:
-                        ssh_session.send(str(e))
-            client.close()
-    return
+                        self.ssh_session.send(str(e))
+                self.client.close()
 
 if __name__=='__main__':
     try:
         global args
         args = cli()
-        ssh_command(args)
+        if args.server:
+            app = Server(args)
+        else:
+            app = Client(args)
+        app.execute()
     except KeyboardInterrupt:
-        ssh_command.client.close()
+        cprint('[*] Keyboard interrupt detected, aborting', Color.ERR)
+        if not args.server:
+            app.client.close()
+        sys.exit(1)
