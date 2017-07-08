@@ -192,7 +192,6 @@ class Client:
 
 if __name__=='__main__':
     try:
-        global args
         args = cli()
         if args.server:
             app = Server(args)
