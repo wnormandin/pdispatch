@@ -73,11 +73,11 @@ when the client might not have an SSH server (e.g most windows boxes).
 
 ## Server Side
 ```
-# python pokeydispatch.py --rsa=/home/wnrmndn/.ssh/id_rsa --user=pokeybill --passwd=testing --ip 127.0.0.1 --port=9998 --server -v
+# python pokeydispatch.py --rsa=id_rsa --user=bill --passwd=tst --ip 127.0.0.1 --port=9998 --server -v
 [*] Starting ssh server
  -  Binding to host 127.0.0.1:9998
  -  Listening for connections
-[*] Session initiated from ('127.0.0.1', 35751)
+[*] Session initiated from ('127.0.0.1', 36225)
  -  Server keys added
  -  Server started
 [*] Authenticated
@@ -112,10 +112,16 @@ Command: quit
 
 ## Client Side
 ```
-# python pokeydispatch.py --ip 127.0.0.1 --port 9998 --user pokeybill --passwd testing --cmd 'ClientConnected' -v --remote
+# python pokeydispatch.py --ip 127.0.0.1 --port 9998 --user bill --passwd tst --cmd 'ClientConnected' -v --remote
 --------------------------------------------------
 [*] Connected to 127.0.0.1:9998
  - SSH session active
 Welcome to pokey_ssh
+[*] Command received: ls
+ -  Sending 14 lines
+[*] Command received: uname -a
+ -  Sending 2 lines
+[*] Command received: exit
+ -  Sending 1 lines
 [!] Socket is closed
 ```
