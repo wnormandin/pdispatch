@@ -4,7 +4,7 @@ Requires Python 3 / paramiko
 
 ## Usage:
 ```
-usage: pokeydispatch.py [-h] [--ip [IP [IP ...]]] [--port PORT] [--user USER]
+usage: pokeydispatch.py [-h] --ip [IP [IP ...]] [--port PORT] [--user USER]
                         [--passwd PASSWD] [--host-key-file HOST_KEY_FILE]
                         [--rsa RSA] [--cmd CMD] [--timeout TIMEOUT] [-C] [-r]
                         [-v] [-i]
@@ -33,16 +33,16 @@ usage: pokeydispatch.py [-h] [--ip [IP [IP ...]]] [--port PORT] [--user USER]
 optional arguments:
   -h, --help            show this help message and exit
   --ip [IP [IP ...]]    Destination host ip(s)
-  --port PORT           Destination host SSH port
-  --user USER           SSH Username
+  --port PORT           Destination host SSH port (default=22)
+  --user USER           SSH Username (default=root)
   --passwd PASSWD       SSH password
   --host-key-file HOST_KEY_FILE
                         Path to known_hosts
   --rsa RSA             Path to id_rsa or other key file
   --cmd CMD             Quoted command to be executed remotely
-  --timeout TIMEOUT     SSH connection/command timeout
+  --timeout TIMEOUT     SSH connection/command timeout (default=5s)
   -C, --nocolor         Disable colors in output
   -r, --remote          Execute commands sent by remote
   -v, --verbose         Enable verbose output
-  -i, --interactive     Start an interactive session
+  -i, --interactive     Start an interactive session (Not yet implemented)
 ```
