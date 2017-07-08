@@ -65,6 +65,11 @@ optional arguments:
   -i, --interactive     Start an interactive session
   -d, --debug           Raise exceptions
 ```
+# Reverse SSH Server
+
+By using the --server mode, an SSH server can be set up which awaits connections
+from a remote client.  This allows remote execution (Server -> Client) in cases
+when the client might not have an SSH server (e.g most windows boxes).
 
 ## Server Side
 ```
@@ -106,8 +111,8 @@ Command: quit
 ```
 
 ## Client Side
-# python pokeydispatch.py --ip 127.0.0.1 --port 9998 --user pokeybill --passwd testing --cmd 'ClientConnected' -v --remote
 ```
+# python pokeydispatch.py --ip 127.0.0.1 --port 9998 --user pokeybill --passwd testing --cmd 'ClientConnected' -v --remote
 --------------------------------------------------
 [*] Connected to 127.0.0.1:9998
  - SSH session active
