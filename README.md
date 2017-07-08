@@ -107,7 +107,6 @@ Linux server.test.us 2.6.32-696.3.1.el6.x86_64 #1 SMP Tue May 30 19:52:55 UTC 20
  -  Getting command
 Command: quit
 [*] Exiting
-[!] exit
 ```
 
 ## Client Side
@@ -121,7 +120,5 @@ Welcome to pokey_ssh
  -  Sending 14 lines
 [*] Command received: uname -a
  -  Sending 2 lines
-[*] Command received: exit
- -  Sending 1 lines
-[!] Socket is closed
+[*] Exit signal received
 ```
