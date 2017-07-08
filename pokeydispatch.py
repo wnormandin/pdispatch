@@ -54,16 +54,16 @@ USAGE= '''
 
     Usage Examples:
         * Basic connectivity test
-        $ ./sshcmd.py --rsa=/path/to/id_rsa.pub --user=<username> --ip <destination IP> --cmd "uname -a"
+        $ ./pokeydispatch.py --rsa=/path/to/id_rsa.pub --user=<username> --ip <destination IP> --cmd "uname -a"
 
         * Passwords may be passed, though keys are recommended
-        $ ./sshcmd.py --user=<username> --password=<password> --ip <destination IP> --cmd "ls"
+        $ ./pokeydispatch.py --user=<username> --password=<password> --ip <destination IP> --cmd "ls"
 
         * Multiple destination IPs are possible
-        $ ./sshcmd.py --user=<username> --rsa=<rsa_pub> --ip 12.34.56.78:122 192.168.1.12:9998
+        $ ./pokeydispatch.py --user=<username> --rsa=<rsa_pub> --ip 12.34.56.78:122 192.168.1.12:9998
 
         * If they all share a common port, use --port
-        $ ./sshcmd.py --user=<username> --rsa=<rsa_pub> --port=<common port> --ip 12.34.56.78 192.168.1.12
+        $ ./pokeydispatch.py --user=<username> --rsa=<rsa_pub> --port=<common port> --ip 12.34.56.78 192.168.1.12
 
         * To run as a server, pass --server.  Various arguments are handled differently:
             --ip:       bind IP address
@@ -232,11 +232,15 @@ class Client:
                 while True:
                     if not self.ssh_session.active:
                         self.ssh_session = self.client.get_transport().open_session()
-                    command = self.ssh_session.recv(1024)
-                    if command == "DISCONNECT":
+                    command = self.ssh_session.recv(1024).decode()
+
+                    if command == "exit":
+                        cprint('[*] Exit signal received', Color.MSG)
                         return
                     try:
+                        cprint('[*] Command received: {}'.format(command), Color.GREEN)
                         output = subprocess.check_output(command, shell=True)
+                        cprint(' -  Sending {} lines'.format(len(output.decode().split('\n'))), Color.BLUE, True)
                         self.ssh_session.send(output)
                     except Exception as e:
                         self.ssh_session.send(str(e))
@@ -296,7 +300,8 @@ if __name__=='__main__':
             app.client.close()
         sys.exit(1)
     except Exception as e:
-        cprint('[!] Unhandled exception: {}'.format(e), Color.ERR)
+        if str(e) != 'exit':
+            cprint('[!] {}'.format(e), Color.ERR)
         try:
             sess.close()
         except:
